@@ -1,0 +1,604 @@
+---
+title: "Introduction to R"
+author: "Pennella Luca"
+date: "September 2024"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Introduction
+
+**R** is an **open-source statistical language**, developed by two statisticians from the University of Auckland. It is now widely used in the world of statistics and data science. For more details, see R Project About Page (`www.r-project.org/about.html`).
+
+Some notable characteristics of R include:
+
+-   A powerful, flexible, and free (open source) language specifically designed for statistical analysis.
+-   There is a collection of packages created by R users that allow its functionality to be extended and implement more modern analysis techniques.
+
+Using R can be made easier through **R Studio**. R Studio is an integrated development environment (IDE) designed to facilitate the writing, management, and execution of R code.
+
+### Before we begin... Let's Install R!
+
+To get started, we need to download R. We will use the CRAN (Comprehensive R Archive Network) for this purpose.
+
+-   **Windows Users**: `cran.r-project.org/bin/windows/base/`
+-   **Mac Users**: `cran.r-project.org/bin/macosx/`
+-   **Linux Users**: `cran.r-project.org/bin/linux/`
+
+By clicking on the respective links, you will download the installation files for R (**`win.exe`** for Windows users, **`.pkg`** for Mac users). At both links, you will find useful installation instructions and support information.
+
+### We're almost there... Let's Install R Studio!
+
+To install **R Studio**: [`www.rstudio.com/products/rstudio/download.`]{.underline}
+
+> ###### **N.B**. If someone has already previously installed R Studio, following the procedure will allow you to install the latest version without having to remove the previous one.
+
+\newpage
+
+**R Studio Structure:**
+
+-   **Source or Editor**: This is where R code is written. Writing code here offers various functionalities, including the ability to save code (R script).
+
+-   **Console**: R code is executed here. You can run not only the code written in the editor but also enter commands directly. This allows you to test and run code quickly.
+
+-   **Environment/History**:
+
+    -   The environment displays the variables and objects currently present in the R session, allowing you to view and manage variables.
+    -   The history panel contains a history of commands executed in the current session, enabling the repetition or modification of previous commands.
+
+-   **Files / Plots / Packages / Help**:
+
+    -   *Files*: Provides a view of files and directories in the working area. You can navigate folders and view files directly from here.
+    -   *Plots*: Displays graphs and figures generated during analysis. It allows you to explore and save the created plots.
+    -   *Packages*: Shows the R packages installed in the environment and also allows for their management (installation/removal of packages).
+    -   *Help*: Provides access to R documentation, including packages and functions. It allows you to search for reference information and get help with R syntax.
+
+These four panels constitute the basic interface of R Studio, which you can customize and organize according to your preferences.
+
+## Let's Get Started!
+
+Before we begin writing R code, it's important to address a few aspects related to writing it:
+
+-   Save our script: **`File -> Save as`**
+
+-   **Working Directory**:
+
+    -   Check the **`path -> getwd()`**
+    -   Default --\> project directory or the directory in which the application was launched
+    -   To change the **`path -> setwd("path/to/new/directory")`** or **`Session -> Set Working Directory -> Choose Directory`**
+
+> ###### **N.B.** The working directory is important because R will look for or save files inside it when file read or write operations are used. For completeness, it is advisable to create an R project for each task, which is an organizational structure that allows for efficient management of all elements associated with a specific data analysis project. In this way, it will be easier to organize files, manage the environment, and libraries.
+
+\newpage
+
+### Basic Function in R
+
+In R, objects are created by assigning a value or a series of values to a name (identifier) using the **assignment operator (`<-`)**:
+
+```{r}
+a <- 2
+b <- 1:10
+```
+
+To obtain information about the objects within the workspace, you can use the command **`ls()`**. To delete an object, simply use **`rm(object_to_be_deleted)`**:
+
+```{r}
+#object list
+ls()
+
+#removing object a
+rm(a)
+
+#delete all objects in the environment
+rm(list=ls())
+```
+
+One of the most basic functions that R can perform is that of a simple calculator. Below are some simple mathematical operations in R:
+
+```{r}
+#Addition, subtraction, multiplication, and division.
+3+5
+3-5
+3*5
+3/5
+
+10 %/% 3 #integer division
+10 %% 3 #modul division
+
+#Exponent, square root, and absolute value.
+2^3 
+2**3
+
+sqrt(4)
+
+abs(-3)
+
+#Rounding
+round(3.14159, 2)
+
+
+#Logarithms and exponentials
+log(10)
+log2(8)
+log(8,2)
+
+exp(2)
+
+#Trigonometric functions
+
+sin(pi/2)
+cos(3)
+tan(4)
+```
+
+Previously, some functions were used, and if you are interested in getting details about a function, you can use the **`help`**:
+
+```{r}
+#help("read.table")
+
+#or
+
+#?read.table
+#?log
+
+#
+#?"%%"
+```
+
+Finally, if you want to **exclude** a part of the code or **add notes**, you can add the hashtag (**\#**) before text or code line.
+
+\newpage
+
+### Data types
+
+**Numbers** are represented through **`numeric`** values, either integers or decimals. All mathematical operations can be performed on this data type.
+
+```{r}
+a <- 10
+b <- 3 / 10
+c <- (a + b) / b
+c
+```
+
+**`Characters`** refer to data values that represent sequences of text or strings. They must be explicitly enclosed in **quotation marks** to be defined, and naturally, they do not allow the execution of any type of mathematical operation.
+
+```{r}
+d <- "1"
+e <- "2"
+#d+e
+```
+
+To get information about the structure of an object, you can use the **`str`** function:
+
+```{r}
+str(d)
+
+x <- "ciao"
+str(x)
+```
+
+There are also **logical values** (`booleans`) that correspond to TRUE or FALSE. Before delving into the examination of data structures, it's useful to understand how to perform object **coercion**, which means transforming it from one data type to another, and how to identify the data type.
+
+```{r}
+
+x <- 3.14
+class(x)
+
+y <- as.integer(x)  
+class(y)
+
+z <- "a"
+as.integer(z)
+
+
+w <- FALSE
+as.numeric(w)
+
+```
+
+\newpage
+
+### Data Structures
+
+In R, a data structure is known as an **object**, which implies a value or a collection of data. Objects are used to store, manipulate, and represent data. Below are the most common objects in R:
+
+-   **Vectors**: Series of elements of the same data type. They can be numeric, character strings, logical (true or false), or other types.
+
+-   **Matrices**: Two-dimensional vectors in which all elements are of the same data type.
+
+-   **Factors**: Objects used to represent categorical data (nominal or ordinal).
+
+-   **Data frames**: Two-dimensional data structures similar to tables in a database or spreadsheet. They can contain columns of different data types. Data frames are often used to represent tabular data.
+
+-   **Lists**: Ordered collections of objects of different data types. They can contain vectors, matrices, data frames, or even other lists. Lists are very flexible and can be used to organize complex data.
+
+-   **Arrays**: Generalizations of matrices with more than two dimensions. They can be used to represent multidimensional data.
+
+Let's try creating some of the mentioned objects together!
+
+\newpage
+
+#### Vectors & Factors
+
+```{r}
+
+# Example 1: Students' grades
+student_grades <- c(28, 30, 22, 24, 26, 30, 18)
+print(student_grades)
+
+# I want to identify how many 30s are there in the vector
+student_grades == 30
+student_grades != 30
+
+# Assign the students with a grade of 30 to the excellent_students vector
+excellent_students <- student_grades[student_grades == 30]
+others <- student_grades[student_grades != 30]
+
+# Example 2: Daily average temperature
+weekly_temperatures <- c(22.5, 23.8, 24.2, 21.7, 25.1, 26.5, 22.9)
+print(weekly_temperatures)
+
+# Identify the days when the temperature was below 25 degrees
+weekly_temperatures < 25
+
+# How many days was the temperature below 25?
+length(weekly_temperatures[weekly_temperatures < 25])
+
+# Example 3: My favorite Netflix series
+favorite_series <- c("Peaky Blinders", "Friends", "Lupin")
+print(favorite_series)
+
+# Example 4: Italian cities visited (Florence, Rome, Venice, Trieste, Bari)?
+cities_visited <- c(TRUE, TRUE, TRUE, TRUE, FALSE)
+print(cities_visited)
+
+
+```
+
+To create numeric vectors, there are **shortcuts** that make their creation easier in some cases:
+
+```{r}
+# Create a vector of numbers from 50 to 70
+
+y <- seq(50, 70)
+print(y)
+
+# We could achieve the same result like this
+
+y <- 50:70
+print(y)
+
+# But if we want the elements to increment by 2 instead of 1
+
+z <- seq(50, 70, 2)
+print(z)
+
+# If we want to create a vector that repeats the same value:
+
+n_rep <- rep(2, 10)
+print(n_rep)
+
+# We can also replicate a vector:
+
+y_rep <- rep(y, 5)
+print(y_rep)
+
+# Another interesting thing...
+x <- c(2, 3, 5)
+w <- c(6, 7, 10)
+
+w_rep <- rep(w, x)
+print(w_rep)
+
+```
+
+Now let's move on to factors:
+
+```{r}
+# Example 1: Favorite Movie Categories
+
+movie_categories <- c(2, 2, 4, 1, 5, 5, 5, 6, 1, 3, 6, 3, 1, 4)
+factor_movie_categories <- factor(movie_categories)
+print(factor_movie_categories)
+
+levels(factor_movie_categories) <- c("Action", "Mystery", "Drama", "Romantic", "Comedy", "Science Fiction")
+print(factor_movie_categories)
+
+# Alternatively...
+
+movie_categories2 <- factor(c("Mystery", "Mystery", "Romantic", "Action", "Comedy"))
+print(movie_categories2)
+
+```
+
+#### Matrices, Arrays, and Data Frames
+
+Let's start by creating matrices:
+
+```{r}
+
+# Statistics exam for Friends characters
+
+# Creating a matrix of scores
+score_matrix <- matrix(c(30, 28, 10, 28, 0, 18, 29, 29, 11, 30, 6, 21), nrow = 6, ncol = 2)
+print(score_matrix)
+
+# Assigning column and row names
+colnames(score_matrix) <- c("Probability", "Inference")
+rownames(score_matrix) <- c("Ross", "Chandler", "Joey", "Monica", "Phoebe", "Rachel")
+
+# Since the characters are American, the scores should be different...
+score_matrix <- matrix(c("A+", "A-", "F", "A-", "F", "D", "A", "A", "F", "A+", "F", "C"), nrow = 6, ncol = 2)
+print(score_matrix)
+
+# Assigning column and row names
+colnames(score_matrix) <- c("Probability", "Inference")
+rownames(score_matrix) <- c("Ross", "Chandler", "Joey", "Monica", "Phoebe", "Rachel")
+
+print(score_matrix)
+
+# Extracting only the scores obtained in Probability
+scores_probability <- score_matrix[, 1]
+as.matrix(scores_probability)
+
+# What scores did Joey get?
+joey_scores <- score_matrix[3, ]
+
+# Other ways to create matrices...
+num_matrix <- seq(5, 100, 5)
+print(num_matrix)
+
+# Setting dimensions:
+dim(num_matrix) <- c(5, 4)
+print(num_matrix)
+
+```
+
+Let's move on array's:
+
+```{r}
+# Creating an array
+array <- array(data = c(1, 2, 3, 4, 5, 6), dim = c(2, 3, 2))
+
+# Printing the array
+print(array)
+
+
+```
+
+Finally, let's look at data frames...
+
+```{r}
+# Football Teams Data Frame!
+
+# Creating a data frame of football teams
+football_teams <- data.frame(
+  Team = c("Juventus", "Milan", "Inter", "Roma", "Napoli"),
+  Coach = c("Massimiliano Allegri", "Stefano Pioli", "Simone Inzaghi", "José Mourinho", "Rudi Garcia"),
+  League = c("Serie A", "Serie A", "Serie A", "Serie A", "Serie A"),
+  Foundation_Year = c(1897, 1899, 1908, 1927, 1926),
+  Serie_A_Titles = c(36, 18, 19, 3, 2),
+  Champions_League_Titles = c(2, 7, 3, 0, 0)
+)
+
+print(football_teams)
+
+# We could also create the data frame differently...
+
+# Direct creation of a data frame
+teams <- c("Juventus", "Milan", "Inter", "Roma", "Napoli")
+coaches <- c("Massimiliano Allegri", "Stefano Pioli", "Simone Inzaghi", "José Mourinho", "Rudi Garcia")
+leagues <- c("Serie A", "Serie A", "Serie A", "Serie A", "Serie A")
+foundation_years <- c(1897, 1899, 1908, 1927, 1926)
+serie_a_titles <- c(36, 18, 19, 3, 2)
+champions_league_titles <- c(2, 7, 3, 0, 0)  
+
+# Creating the data frame by combining columns
+football_teams <- data.frame(
+  Team = teams,
+  Coach = coaches,
+  League = leagues,
+  Foundation_Year = foundation_years,
+  Serie_A_Titles = serie_a_titles,
+  Champions_League_Titles = champions_league_titles
+)
+
+# Print the data frame
+print(football_teams)
+
+# Add a new team to the data frame
+fiorentina <- data.frame(
+  Team = "Fiorentina",
+  Coach = "Vincenzo Italiano",
+  League = "Serie A",
+  Foundation_Year = 1926,
+  Serie_A_Titles = 2,
+  Champions_League_Titles = 0
+)
+
+# Combine the existing data frame with Fiorentina's data
+football_teams <- rbind(football_teams, fiorentina)
+
+# Print the updated data frame
+print(football_teams)
+
+# Creating a new column with stadium data
+stadiums <- c("Allianz Stadium", "San Siro", "San Siro", "Stadio Olimpico", "Stadio Diego Armando Maradona", "Stadio Artemio Franchi")
+
+# Add the new column to the data frame
+football_teams$Stadium = stadiums
+
+# Print the updated data frame
+print(football_teams)
+
+# Alternatively, I can use another command
+stadiums <- c("Allianz Stadium", "San Siro", "San Siro", "Stadio Olimpico", "Stadio Diego Armando Maradona", "Stadio Artemio Franchi")
+
+# Add the new column to the data frame using cbind
+football_teams <- cbind(football_teams, Stadium = stadiums)
+
+print(football_teams)
+
+```
+
+### Lists
+
+```{r}
+# Creating the Serie A dataframe
+serie_a_teams <- data.frame(
+  Team = c("Juventus", "Milan", "Inter", "Roma", "Napoli"),
+  Coach = c("Massimiliano Allegri", "Stefano Pioli", "Simone Inzaghi", "José Mourinho", "Rudi Garcia"),
+  Foundation_Year = c(1897, 1899, 1908, 1927, 1926),
+  Serie_A_Titles = c(36, 18, 19, 3, 2)
+)
+
+# Creating the Bundesliga dataframe
+bundesliga_teams <- data.frame(
+  Team = c("Bayern Munich", "Borussia Dortmund", "RB Leipzig", "Bayer Leverkusen", "Borussia Mönchengladbach"),
+  Coach = c("Julian Nagelsmann", "Marco Rose", "Jesse Marsch", "Gerardo Seoane", "Adi Hütter"),
+  Foundation_Year = c(1900, 1909, 2009, 1904, 1900),
+  Bundesliga_Titles = c(31, 8, 0, 0, 0)
+)
+
+# Creating the Premier League dataframe
+premier_league_teams <- data.frame(
+  Team = c("Manchester United", "Liverpool", "Manchester City", "Chelsea", "Arsenal"),
+  Coach = c("Ole Gunnar Solskjær", "Jurgen Klopp", "Pep Guardiola", "Thomas Tuchel", "Mikel Arteta"),
+  Foundation_Year = c(1878, 1892, 1880, 1905, 1886),
+  Premier_League_Titles = c(20, 19, 7, 5, 3)
+)
+
+# Creating a list of dataframes
+team_lists <- list(SerieA = serie_a_teams, Bundesliga = bundesliga_teams, PremierLeague = premier_league_teams)
+
+# Print the list of dataframes
+print(team_lists)
+
+# If I want to see only Serie A...
+team_lists$SerieA
+
+```
+
+
+## Package Installation and Data Management
+
+A **package** in R is a collection of functions, data, and related documentation. Packages are designed to extend the basic functionality of R, allowing users to perform specific tasks more efficiently and powerfully. The package repository is CRAN, and packages can be installed using the command `install.packages(package name)`. Once the package is installed, you can call it so that it is available in the R environment:
+
+```{r}
+# Install the ggplot2 package
+# install.packages("ggplot2")
+
+# Call the library
+library(ggplot2)
+
+```
+
+Some highly useful and functional packages that I recommend you to install are: `ggplot2, dplyr, tidyr, lubridate.`
+
+> ###### N.B. I suggest taking a look at the **pacman: Package Management Tool package** (<https://cran.r-project.org/web/packages/pacman/index.html>), which allows you to speed up certain operations such as loading multiple packages at the same time.
+
+```{r}
+# Install multiple packages at once
+
+# install.packages(c("dplyr", "stringr"))
+```
+
+## Data import in R
+
+Importing data into R means taking a dataset from an external source and loading it into the R working environment so that it can be used for further processing. Data can come from various types of sources and can be of different types, but generally, the most common sources are Excel spreadsheets (in .csv and .xlsx formats) and text files (.txt) for local files. The general form for importing data into R is **`read.`**`<format>`, and for saving R files locally, it's **`write.`**`<format>`. Let's see some examples below:
+
+```{r,eval=FALSE}
+read.csv("dati_spotify.csv")
+
+```
+
+If we had a dataset in **.xlsx** format, we could use the following command `read.xlsx("file path", sheetName="sheet name")`, from the `openxlsx` package, and in the case of a text file, `read.table("file path", header=TRUE)`.
+
+Now let's try saving a data frame locally:
+
+```{r}
+
+data_frame <- data.frame(
+  Name = c("Alice", "Bob", "Elvis", "David", "Thomas"),
+  Age = c(25, 30, 22, 35, 28),
+  Student = c(TRUE, FALSE, TRUE, FALSE, TRUE)
+)
+
+write.table(data_frame, "data_frame.txt", quote = FALSE, sep = "\t")
+
+
+```
+
+## Dealing with NA's
+
+Let's create a vector with some missing data:
+
+```{r}
+# vector with missing data
+x <- c(1:3, NA, 20:27, NA)
+x
+```
+
+to identify missing data we can use `is.na()` which returns a logical vector with `TRUE` in the element locations that contain missing values represented by `NA`; it work on vectors, lists, matrices, and data frames.
+
+```{r}
+is.na(x)
+```
+
+To identify the location or number of NAN's we can do as follows:
+
+```{r}
+# identify location of NAs in vector
+which(is.na(x))
+
+# count the number of NAs
+sum(is.na(df))
+
+#for dataframes try to use colSums()
+```
+
+Sometimes it is useful to recode the NA values or to remove it from data:
+
+```{r}
+#replace NA's, a common way is to substitute the mean
+x[is.na(x)] <- mean(x, na.rm = TRUE)
+
+#remove NA's
+x <- c(1:3, NA, 20:27, NA)
+x<- x[!is.na(x)]
+
+#take a look to complete.cases() function or na.omit() for data frames!
+```
+
+## Functions in R
+
+In R, a function refers to a block of code that performs a specific action when called or invoked. R has many predefined functions, but it is also possible to create custom functions. Let's try creating a function that allows us to sum three values:
+
+```{r}
+sum <- function(a,b,c) {
+  a+b+c
+}
+
+sum(1,2,3)
+```
+
+Now, let's try creating a different function without specifying arguments:
+
+```{r}
+cube <- function() {
+   for(x in 1:3) {
+      print(x^3)
+   }
+} 
+
+cube()
+
+```
+
+There are some pre-defined functions in R that are very useful to explore. These functions include **apply**, namely `apply`, `lapply`, `tapply`, `sapply` ([Learn more](https://ademos.people.uic.edu/Chapter4.html)).
