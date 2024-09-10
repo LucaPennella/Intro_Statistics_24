@@ -1,0 +1,137 @@
+---
+title: "Probability and statistics with R for Data Science"
+author: "Luca Pennella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dslabs)
+
+```
+
+### **Robust Summaries**
+
+When dealing with real-world data, particularly data that involves manual entry, outliers are often a significant concern. These outliers can skew summaries such as the mean and standard deviation, leading to misleading conclusions. Therefore, employing robust statistical methods that can handle outliers is essential.
+
+#### **Understanding Outliers**
+
+Outliers are data points that significantly deviate from other observations in the data set. They can arise due to errors in data collection, data entry mistakes (e.g., entering centimeters instead of inches or misplaced decimals), or unusual variations not typical of the data.
+
+**Detecting Outliers**:
+
+Outliers can be visually detected using tools like boxplots, which plot data points that fall outside the typical range (1.5 times the interquartile range above the third quartile or below the first quartile) as outliers.
+
+```{r,eval=TRUE}
+# Example boxplot to detect outliers
+boxplot(outlier_example)
+```
+
+In this example, the boxplot would show any extremely high values as individual points beyond the whiskers, indicating potential outliers.
+
+#### **Impact of Outliers on Summaries**
+
+Using a simple example of height data reported in feet, let's explore how outliers affect the data summary:
+
+1. **Loading and Understanding the Data**:
+   - Load the data from the `dslabs` package and inspect its structure to understand what it includes.
+   
+```{r,eval=TRUE}
+   library(dslabs)
+   str(outlier_example)  # Shows the structure of the data object
+```
+
+2. **Calculating Mean and Standard Deviation**:
+   - Calculate the mean and standard deviation, which might initially suggest that the group is unusually tall.
+   
+```{r,eval=TRUE}
+   mean_height <- mean(outlier_example)
+   sd_height <- sd(outlier_example)
+```
+
+3. **Identifying Problems with Standard Deviation**:
+   - A very high standard deviation, such as over 7 feet, can indicate the presence of extreme values.
+   - Calculating the range within which 95% of the data should fall might reveal implausible values (e.g., negative heights or extremely high heights).
+
+```{r,eval=TRUE}
+   range_95pct <- mean_height + c(-2, 2) * sd_height
+```
+
+4. **Visual Examination**:
+   - Visualizing the data with a boxplot can help confirm the presence of outliers.
+   
+```{r,eval=TRUE}
+   boxplot(outlier_example)
+```
+
+#### **Robust Statistical Methods**
+
+To mitigate the effects of outliers on data analysis, robust statistical methods are crucial:
+
+- **Median and Interquartile Range (IQR)**: Unlike the mean and standard deviation, the median and IQR are less sensitive to outliers. The median represents the middle value, and the IQR measures the middle 50% spread of the data, both providing a more reliable summary of central tendency and variability.
+  
+- **Trimmed Means**: This method involves removing a certain percentage of the lowest and highest data points before calculating the mean, thereby reducing the influence of extreme outliers.
+
+- **Winsorizing**: Similar to trimming, Winsorizing involves replacing the extreme values with the nearest values that are not outliers, thus limiting the impact of those extreme cases.
+
+Robust summaries are essential for accurate data analysis, especially when dealing with real-world data that may include errors or unusual values. These methods ensure that the statistical summaries are truly representative of the underlying data, avoiding the misleading interpretations that outliers can cause.
+
+### **The Median and Interquartile Range (IQR)**
+
+In statistical analysis, especially when outliers are present, relying solely on the mean can be misleading. Instead, the median and IQR provide robust alternatives that are less susceptible to extreme values.
+
+#### **The Median**
+
+The median is a central value that divides a data set into two equal halves. It remains unaffected by extreme values, making it a highly robust measure of central tendency.
+
+**Calculating the Median:**
+```{r,eval=TRUE}
+# Calculate the median of outlier_example
+median_value <- median(outlier_example)
+```
+
+The calculated median represents the middle value of the dataset, and it does not change, no matter how extreme the outliers are. This makes the median particularly useful in situations where the data might contain erroneous entries or unusually large or small values.
+
+#### **The Interquartile Range (IQR)**
+
+The IQR measures the spread of the middle 50% of the data, providing an idea of the data variability. It is calculated as the difference between the 75th percentile (third quartile, Q3) and the 25th percentile (first quartile, Q1).
+
+**Calculating the IQR:**
+```{r,eval=TRUE}
+# Calculate the interquartile range of outlier_example
+iqr_value <- IQR(outlier_example)
+```
+
+**Using IQR to Estimate Standard Deviation:**
+For normally distributed data, the IQR can be used to approximate the standard deviation. The formula `IQR / 1.349` approximates the standard deviation, assuming no outliers were present.
+
+```{r,eval=TRUE}
+# Approximate standard deviation from IQR
+estimated_sd <- iqr_value / 1.349
+estimated_sd_inches <- round(estimated_sd * 12)  # Convert to inches if needed
+```
+
+This approximation is particularly useful when the data is skewed by outliers, as it provides a more accurate measure of variability than the standard deviation calculated directly from such data.
+
+## A data-driven definition of outliers
+
+In R, points falling outside the whiskers of the boxplot are referred to as *outliers*. This definition of outlier was introduced by John Tukey. The top whisker ends at the 75th percentile plus 1.5 $\times$ IQR. Similarly the bottom whisker ends at the 25th percentile minus 1.5$\times$ IQR. If we define the first and third quartiles as $Q_1$ and $Q_3$, respectively, then an outlier is anything outside the range:
+
+$$[Q_1 - 1.5 \times (Q_3 - Q1), Q_3 + 1.5 \times (Q_3 - Q1)].$$
+
+When the data is normally distributed, the standard units of these values are:
+
+```{r}
+q3 <- qnorm(0.75)
+q1 <- qnorm(0.25)
+iqr <- q3 - q1
+r <- c(q1 - 1.5*iqr, q3 + 1.5*iqr)
+r
+```
+
+Using the `pnorm` function, we see that `r round(pnorm(r[2]) - pnorm(r[1]),3)*100`% of the data falls in this interval.
+
+Keep in mind that this is not such an extreme event: if we have 1,000 data points that are normally distributed, we expect to see about 7 outside of this range. But these would not be outliers since we expect to see them under the typical variation.
