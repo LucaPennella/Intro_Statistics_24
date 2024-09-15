@@ -1,0 +1,293 @@
+---
+title: "Probability and statistics with R for Data Science"
+author: "Luca Pennella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dslabs)
+
+```
+
+### **Random Variables and Their Applications in Risk Assessment**
+
+Random variables are fundamental in quantifying uncertainties and modeling probabilities in various scenarios, from simple games of chance to complex financial systems.
+
+
+A random variable is a numerical description of the outcome of a statistical experiment. A random variable that can take on any of several different values is not predictable but it is possible to calculate probabilities of its different outcomes.
+
+**Example: Sampling from an Urn**
+
+Suppose we have an urn that contains beads of two colors: red and blue. If we define a random variable \(X\) such that \(X = 1\) if a bead is blue and \(X = 0\) if a bead is red, we can model the drawing of a bead as a random variable.
+
+```{r,eval=TRUE}
+# Set up for reproducible results
+set.seed(1)
+
+# Define the beads
+beads <- rep(c("red", "blue"), times = c(2,3))
+
+# Draw a bead and assign value to X
+X <- ifelse(sample(beads, 1) == "blue", 1, 0)
+
+```
+
+Each draw from the urn gives us a new outcome for \(X\), making it a random variable.
+
+```{r,eval=TRUE}
+# Additional draws to illustrate random outcomes
+draws <- replicate(3, ifelse(sample(beads, 1) == "blue", 1, 0))
+draws
+```
+
+#### **Modeling Data Generation: Sampling Models**
+
+Let's consider a casino game where players bet on red or black on a roulette wheel. The casino wants to assess the risk of setting up roulette wheels based on potential winnings or losses.
+```{r,eval=TRUE}
+color <- rep(c("Black", "Red", "Green"), c(18, 18, 2))
+```
+
+The 1,000 outcomes from 1,000 people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in a draw a -\$1. Otherwise, the casino wins a dollar, and we draw a \$1. To construct our random variable $S$, we can use this code:
+
+```{r,eval=TRUE}
+n <- 1000
+X <- sample(ifelse(color == "Red", -1, 1),  n, replace = TRUE)
+X[1:10]
+```
+
+Because we know the proportions of 1s and -1s, we can generate the draws with one line of code, without defining `color`:
+
+```{r,eval=TRUE}
+X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+```
+
+We call this a **sampling model**, as it involves modeling the random behavior of roulette through the sampling of draws from an urn. The total winnings $S$ is simply the sum of these 1,000 independent draws:
+
+```{r,eval=TRUE}
+X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+S <- sum(X)
+S
+```
+### **Understanding the Probability Distribution of a Random Variable**
+
+When you run the code above, you'll notice that the value of \( S \) changes every time. This happens because \( S \) is a **random variable**. The probability distribution of a random variable tells us the likelihood that the observed value will fall within a certain range. For example, if we want to know the chance of losing money, we're asking about the probability that \( S \) is less than 0, or \( S < 0 \).
+
+If we can define the cumulative distribution function \( F(a) = \text{Pr}(S \leq a) \), we can answer any question about the probabilities of events defined by our random variable \( S \), including the event \( S < 0 \). We refer to \( F \) as the random variable's *distribution function*.
+
+### **Estimating the Distribution Function Using Monte Carlo Simulation**
+
+We can estimate the distribution function for \( S \) by using a Monte Carlo simulation, which involves generating many instances of the random variable. In the code below, we simulate 1,000 people playing roulette 10,000 times:
+
+```{r,eval=TRUE}
+n <- 1000
+B <- 10000
+roulette_winnings <- function(n){
+  X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+  sum(X)
+}
+S <- replicate(B, roulette_winnings(n))
+```
+
+### **Calculating the Probability of an Event**
+
+Now, we can estimate how often we get sums less than or equal to a specific value \( a \):
+
+```{r,eval=FALSE}
+mean(S <= a)
+```
+
+This calculation provides a good approximation of \( F(a) \), which helps us answer questions like: How likely is it that we will lose money? The probability is generally low:
+
+```{r,eval=TRUE}
+mean(S < 0)
+```
+
+### **Visualizing the Distribution**
+
+We can visualize the distribution of \( S \) by creating a histogram. This histogram shows the probability \( F(b)-F(a) \) for different intervals \((a,b]\):
+
+```{r,eval=TRUE}
+s <- seq(min(S), max(S), length = 100)
+normal_density <- data.frame(s = s, f = dnorm(s, mean(S), sd(S)))
+data.frame(S = S) |> ggplot(aes(S, after_stat(density))) +
+  geom_histogram(color = "black", binwidth = 10)  +
+  ylab("Probability") + 
+  geom_line(data = normal_density, mapping = aes(s,f), color = "blue")
+```
+
+The distribution appears to be approximately normal.  If the distribution is indeed normal, we can describe it using just the mean and standard deviation. These values can be calculated easily with `mean(S)` and `sd(S)`. The blue curve in the histogram represents a normal distribution with the same mean and standard deviation as our data.
+
+### **Expected Value and Standard Error**
+
+The mean and standard deviation of \( S \) have special names: they are called the *expected value* and *standard error* of the random variable \( S \).
+
+### **Using Binomial Distribution**
+
+Statistical theory provides a way to determine the distribution of random variables like \( S \) when they are the sum of independent random draws. In our example, we can show that \( (S+n)/2 \) follows a binomial distribution. This means that we don't always need to run Monte Carlo simulations to determine the probability distribution of \( S \); the simulations here are mainly for illustration.
+
+We can use the functions `dbinom` and `pbinom` in R to calculate these probabilities exactly. For example, to compute the probability \( \text{Pr}(S < 0) \), we can use:
+
+```{r,eval=TRUE}
+n <- 1000
+pbinom(n/2, size = n, prob = 10/19)
+```
+
+To obtain \( \text{Pr}(S < 0) \) rather than \( \text{Pr}(S \leq 0) \), we adjust slightly:
+
+```{r,eval=TRUE}
+pbinom(n/2 - 1, size = n, prob = 10/19)
+```
+
+### **Expected Value and Standard Error**
+
+In statistics, when we're dealing with random variables, two key concepts are crucial for understanding and predicting outcomes: the **expected value** and the **standard error**. 
+
+#### **Expected Value**
+
+The expected value of a random variable is like the average outcome you'd expect if you repeated an experiment many, many times. It's denoted as \( \text{E}[X] \) and is calculated differently depending on whether the random variable is discrete (having specific, separate values) or continuous (having any value within a range).
+
+For a discrete random variable with possible outcomes \( x_1, x_2, \dots, x_n \), the expected value is calculated by multiplying each possible outcome by its probability and summing them up:
+
+\[
+\text{E}[X] = \sum_{i=1}^n x_i \, \text{Pr}(X = x_i)
+\]
+
+If \( X \) is a continuous random variable, the sum turns into an integral:
+
+\[
+\text{E}[X] = \int_a^b x f(x)\, dx
+\]
+
+where \( f(x) \) is the probability density function of \( X \).
+
+**Example: Roulette Game**
+
+In a roulette game where you bet on red, the expected value can be calculated as follows:
+
+- The urn contains 20 positive outcomes (+1 dollar for winning) and 18 negative outcomes (-1 dollar for losing).
+- The expected value is:
+
+\[
+\text{E}[X] = \frac{20 - 18}{38} \approx 0.05
+\]
+
+This means that, on average, the casino expects to win 5 cents per game. While it might seem odd to say the expected value is 0.05 when the outcomes are either +1 or -1, this average becomes meaningful over many games.
+
+A Monte Carlo simulation confirms this expected value:
+
+```{r,eval=TRUE}
+B <- 10^6
+x <- sample(c(-1, 1), B, replace = TRUE, prob = c(9/19, 10/19))
+mean(x)
+```
+
+#### **Standard Error**
+
+The standard error (SE) measures how much the values of the random variable vary around the expected value. It's essentially the standard deviation of the random variable and gives us an idea of the typical difference between a single outcome and the expected value.
+
+For a discrete random variable, the standard error is defined as:
+
+\[
+\text{SE}[X] = \sqrt{\sum_{i=1}^n \left(x_i - \text{E}[X]\right)^2 \,\text{Pr}(X = x_i)}
+\]
+
+For a continuous random variable, this turns into an integral:
+
+\[
+\text{SE}[X] = \sqrt{\int_a^b \left(x-\text{E}[X]\right)^2 f(x)\,\mathrm{d}x}
+\]
+
+If each outcome in an urn has an equal chance of being selected, the standard error becomes the standard deviation of those outcomes.
+
+**Example: Roulette Game (Standard Error Calculation)**
+
+In the roulette game, where the possible outcomes are +1 or -1, and their probabilities are \( p = 10/19 \) and \( 1-p = 9/19 \), the standard deviation is:
+
+\[
+\text{SE}[X] = |1 - (-1)| \sqrt{p(1-p)} = 2 \times \sqrt{\frac{90}{19^2}} \approx 1.0
+\]
+
+This means that although the expected value per game is 0.05 dollars, the outcomes vary significantly, typically by about 1 dollar.
+
+#### **Standard Error of the Sum**
+
+When you're dealing with the sum of independent random variables, the standard error of the sum is:
+
+\[
+\text{SE}[\text{Sum}] = \sqrt{\text{number of draws}} \times \text{SE}[X]
+\]
+
+For example, if 1,000 people play the game, the standard error of the sum is:
+
+```{r,eval=TRUE}
+n <- 1000
+sqrt(n) * 2 * sqrt(90)/19
+```
+
+As a result, when 1,000 people bet on red, the casino is expected to win \$50 with a standard error of \$32. 
+
+
+
+## Statistical properties of averages
+
+There are several useful mathematical results that we used above and often employ when working with data. We list them below.
+
+1\. The expected value of the sum of random variables is the sum of each random variable's expected value. We can write it like this:
+
+$$ 
+\mbox{E}[X_1+X_2+\dots+X_n] =  \mbox{E}[X_1] + \mbox{E}[X_2]+\dots+\mbox{E}[X_n]
+$$
+
+If $X$ represents independent draws from the urn, then they all have the same expected value. Let's denote the expected value with $\mu$ and rewrite the equation as:
+
+$$ 
+\mbox{E}[X_1+X_2+\dots+X_n]=  n\mu
+$$
+
+which is another way of writing the result we show above for the sum of draws.
+
+2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. This is easier to explain with symbols:
+
+$$
+\mbox{E}[aX] =  a\times\mbox{E}[X]
+$$
+
+To understand why this is intuitive, consider changing units. If we change the units of a random variable, such as from dollars to cents, the expectation should change in the same way. A consequence of the above two facts is that the expected value of the average of independent draws from the same urn is the expected value of the urn, denoted as $\mu$ again:
+
+$$
+\mbox{E}[(X_1+X_2+\dots+X_n) / n]=   \mbox{E}[X_1+X_2+\dots+X_n] / n = n\mu/n = \mu 
+$$
+
+3\. The square of the standard error of the sum of **independent** random variables is the sum of the square of the standard error of each random variable. This one is easier to understand in math form:
+
+$$ 
+\mbox{SE}[X_1+X_2+\dots+X_n] = \sqrt{\mbox{SE}[X_1]^2 + \mbox{SE}[X_2]^2+\dots+\mbox{SE}[X_n]^2  }
+$$
+
+The square of the standard error is referred to as the *variance* in statistical textbooks. Note that this particular property is not as intuitive as the previous three and more in depth explanations can be found in statistics textbooks.
+
+4\. The standard error of a non-random constant times a random variable is the non-random constant times the random variable's standard error. As with the expectation: 
+
+$$
+\mbox{SE}[aX] =  a \times \mbox{SE}[X]
+$$
+
+To see why this is intuitive, again think of units.
+
+A consequence of 3 and 4 is that the standard error of the average of independent draws from the same urn is the standard deviation of the urn divided by the square root of $n$ (the number of draws), call it $\sigma$:
+
+$$
+\begin{aligned}
+\mbox{SE}[(X_1+X_2+\dots+X_n) / n] &=   \mbox{SE}[X_1+X_2+\dots+X_n]/n \\
+&= \sqrt{\mbox{SE}[X_1]^2+\mbox{SE}[X_2]^2+\dots+\mbox{SE}[X_n]^2}/n \\
+&= \sqrt{\sigma^2+\sigma^2+\dots+\sigma^2}/n\\
+&= \sqrt{n\sigma^2}/n\\
+&= \sigma / \sqrt{n}    
+\end{aligned}
+$$
+
+

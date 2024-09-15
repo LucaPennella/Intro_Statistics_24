@@ -1,0 +1,373 @@
+---
+title: "Probability and statistics with R for Data Science"
+author: "Luca Pennella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dslabs)
+
+```
+
+### **Continuous Probability and Cumulative Distribution Functions (CDFs)**
+
+In the realm of continuous random variables, such as heights or weights, constructing a probability distribution is more abstract than with discrete random variables. Rather than assigning probabilities to individual outcomes (which are infinitely many), we use probability density functions (PDFs) and cumulative distribution functions (CDFs) to describe probabilities over intervals or ranges.
+
+#### **Continuous Random Variables and CDFs**
+
+For continuous random variables, the CDF, or cumulative distribution function, is fundamental. It gives the probability that a random variable \( X \) is less than or equal to a certain value \( a \).
+
+#### **Empirical Cumulative Distribution Function (eCDF)**
+
+The empirical CDF (eCDF) approximates the true CDF based on observed data. It is a step function that jumps up by \( \frac{1}{n} \) at each of the \( n \) data points. Here’s how you might compute and visualize the eCDF for a sample of male student heights using R:
+
+```{r,eval=TRUE}
+
+data("heights")
+x <- heights %>% filter(sex == "Male") %>% pull(height)
+
+# Define the eCDF
+F <- function(a) mean(x <= a)
+
+# Example: Compute the eCDF for 70.5 inches
+eCDF_70_5 <- F(70.5)
+eCDF_70_5
+```
+
+This function \( F \) gives the proportion of the dataset \( x \) where the observations are less than or equal to any value \( a \).
+
+#### **Connecting eCDF to Probability**
+
+To use the eCDF to estimate probabilities, consider:
+
+```{r,eval=TRUE}
+# Probability that a randomly selected male student is taller than 70.5 inches
+probability_taller_than_70_5 <- 1 - F(70.5)
+probability_taller_than_70_5
+```
+
+This computation uses the eCDF to estimate the probability that a male student is taller than 70.5 inches based on the available data.
+
+#### **Theoretical CDF**
+
+The CDF for a continuous random variable \( X \) is defined as:
+
+$$ F(a) = \mbox{Pr}(X \leq a) $$
+
+This function is continuous and non-decreasing, and it provides a complete description of the distribution of \( X \). The CDF is particularly useful because:
+
+* **It gives the probability that \( X \) is less than or equal to any value \( a \).**
+* **Differences in the CDF can be used to find probabilities over intervals:**
+  $$ \mbox{Pr}(a < X \leq b) = F(b) - F(a) $$
+
+#### **Visualizing the CDF**
+
+Here’s how you might visualize the CDF (or eCDF) in R using the dataset:
+
+```{r,eval=TRUE}
+library(ggplot2)
+ggplot(data.frame(x), aes(x = x)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Empirical CDF of Male Student Heights", x = "Height (inches)", y = "eCDF")
+```
+
+This plot shows the proportion of data at or below each height, giving a visual representation of how the values are distributed.
+
+
+#### **Defining the Probability Density function**
+
+The PDF, denoted as \( f(x) \), is the derivative of the CDF. It describes the likelihood of a random variable taking on the value at any point \( x \). For a given range \([a, b]\), the probability that a variable lies within this range is given by the integral of the PDF over that range:
+
+$$
+F(b) - F(a) = \int_a^b f(x)\,dx
+$$
+
+This formula indicates that the probability of the random variable falling between \( a \) and \( b \) is the area under the PDF curve from \( a \) to \( b \).
+
+#### **Visualizing the PDF and the Reimann Sum**
+
+Here's a visualization that compares the continuous curve of the PDF with a histogram-like approximation using Riemann sums:
+
+```{r,eval=TRUE}
+# Example data for visualization
+cont <- data.frame(x = seq(0, 5, length.out = 300), y = dgamma(seq(0, 5, length.out = 300), 2, 2))
+disc <- data.frame(x = seq(0, 5, by = 0.075), y = dgamma(seq(0, 5, by = 0.075), 2, 2))
+
+# Plotting
+library(ggplot2)
+ggplot(mapping = aes(x, y)) +
+  geom_col(data = disc, width = 0.075, fill = "blue", alpha = 0.5) +
+  geom_line(data = cont, color = "red") +
+  labs(y = "f(x)", title = "Probability Density Function (PDF)")
+```
+
+This graph shows how the Riemann sum approximates the area under the PDF curve, which corresponds to the probability for a range of values.
+
+#### **Example: Normal Distribution**
+
+The normal distribution is a commonly used continuous distribution, characterized by its bell-shaped curve, and is defined mathematically by its mean \( m \) and standard deviation \( s \). The PDF of a normal distribution is:
+
+$$
+f(x) = \frac{1}{\sqrt{2\pi s^2}} e^{-\frac{1}{2}\left( \frac{x-m}{s} \right)^2}
+$$
+
+The CDF, which gives the probability that the variable is less than or equal to a certain value, is integral to computing probabilities directly:
+
+```{r,eval=TRUE}
+# Calculating the probability of a student being taller than 70.5 inches
+m <- mean(x)  # Assume x is the vector of heights
+s <- sd(x)
+probability_taller_than_70_5 <- 1 - pnorm(70.5, m, s)
+probability_taller_than_70_5
+```
+
+### **Theoretical Distributions as Approximations in Data Analysis**
+
+When working with real-world data, theoretical distributions like the normal distribution provide valuable approximations that help simplify analysis. However, it's crucial to recognize the limitations of these approximations, especially when dealing with discretized or rounded data, as commonly seen in measurements like height.
+
+#### **Theoretical vs. Empirical Distributions**
+
+**Empirical Distribution:**
+* Derived directly from data.
+* For height measurements, it would reflect the exact proportions of each reported height.
+
+**Theoretical Distribution:**
+* Mathematically derived and doesn't require data to define it.
+* For continuous variables like height, the normal distribution can serve as an approximation.
+
+#### **Plotting the Probability Distribution for Height Data**
+
+Suppose `x` represents the heights of students in a dataset. A plot of the empirical distribution of `x` might look like:
+
+```{r,eval=TRUE}
+# Crea una tabella delle frequenze
+frequency_table <- table(x)
+
+# Converti la tabella in un dataframe
+data <- as.data.frame(frequency_table)
+
+# Rinomina le colonne
+names(data) <- c("height", "count")
+
+# Calcola la proporzione per ciascuna altezza
+data$frequency <- prop.table(data$count)
+
+# Carica ggplot2 per il plotting
+library(ggplot2)
+
+# Crea il plot
+ggplot(data, aes(x = height, y = frequency)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Height in inches", y = "Probability (Pr(X = a))") +
+  ggtitle("Probability Distribution of Heights")
+
+```
+
+This plot would show the probability of each specific height, highlighting how most data points are rounded to the nearest inch.
+
+
+#### **Probability Density Function (PDF)**
+
+In continuous probability distributions, the probability of a random variable \(X\) taking on any specific value is zero. Instead, we define a probability density function \(f(x)\) such that the probability that \(X\) lies within a certain range can be calculated using an integral.
+
+**Example: Rolling a Die (Categorical)**
+```{r,eval=TRUE}
+# Probability of rolling a 4
+prob_4 <- 1/6
+
+# Cumulative probability up to 4
+F_4 <- sum(1/6, 1/6, 1/6, 1/6)
+```
+
+For a die roll, the CDF at 4 sums the probabilities of rolling a 1, 2, 3, or 4.
+
+**Example: Normal Distribution (Continuous)**
+```{r,eval=TRUE}
+# Assuming 'm' is the mean and 's' is the standard deviation of a dataset
+m <- mean(x)  # Placeholder for actual mean computation
+s <- sd(x)    # Placeholder for actual standard deviation computation
+
+# Probability of being taller than 76 inches
+probability_taller_than_76 <- 1 - pnorm(76, m, s)
+probability_taller_than_76
+```
+
+The integral from \(-\infty\) to a specific point \(a\) of the PDF \(f(x)\) gives us the CDF \(F(a)\), which is the probability that \(X \leq a\).
+
+#### **Visualizing the PDF**
+
+Let's visualize how the normal distribution PDF looks and how to compute the area under the curve for probabilities:
+
+```{r,eval=TRUE}
+library(ggplot2)
+
+# Data for plotting
+dat <- tibble(x = seq(-4, 4, length.out = 100) * s + m, y = dnorm(x, mean = m, sd = s))
+dat_ribbon <- dat %>% filter(x >= 76)
+
+# Plotting the PDF and shading the area for P(X > 76)
+ggplot(dat, aes(x, y)) +
+  geom_line() +
+  geom_ribbon(data = dat_ribbon, aes(ymin = 0, ymax = y), fill = "grey", alpha = 0.5) +
+  labs(title = "Normal Distribution PDF", x = "Height (inches)", y = "Density")
+```
+
+This plot shows the PDF for a normal distribution centered at \(m\) with a standard deviation \(s\). The shaded area represents the probability of \(X\) being greater than 76 inches.
+
+
+#### **Generating Normally Distributed Data**
+
+We can simulate a dataset that resembles the reported heights using the `rnorm` function, which generates normally distributed random numbers.
+
+```{r,eval=TRUE}
+# Assuming 'x' contains the actual height data
+n <- length(x)
+m <- mean(x)
+s <- sd(x)
+
+# Generate simulated heights
+simulated_heights <- rnorm(n, m, s)
+```
+
+#### **Visualizing the Simulated Heights**
+
+To visualize these heights, we can plot them using a histogram, which should ideally follow a normal distribution due to the properties of the `rnorm` function.
+
+```{r,eval=TRUE}
+
+# Plotting the simulated heights
+data.frame(simulated_heights = simulated_heights) |>
+  ggplot(aes(x = simulated_heights)) +
+  geom_histogram(color = "black", fill = "grey", binwidth = 1) +
+  labs(title = "Histogram of Simulated Heights", x = "Height (inches)", y = "Frequency")
+```
+
+#### **Monte Carlo Simulation: Tallest Person in a Sample**
+
+One interesting question we can answer with Monte Carlo simulations is: In a randomly selected group of 800 males, what is the distribution of the tallest person?
+
+```{r,eval=TRUE}
+# Number of simulations
+B <- 10000
+
+# Simulate finding the tallest person in each group of 800
+tallest <- replicate(B, {
+  simulated_data <- rnorm(800, m, s)
+  max(simulated_data)
+})
+```
+
+#### **Probability of Finding a Seven-Footer**
+
+To find out how rare it is to encounter a person over seven feet tall in these groups, we calculate the proportion of groups where the tallest person meets this criterion.
+
+```{r,eval=TRUE}
+# Probability of having a seven-footer
+probability_seven_footer <- mean(tallest >= 7*12)  # 7 feet in inches
+probability_seven_footer
+```
+
+#### **Visualizing the Distribution of the Tallest Person**
+
+The distribution of the tallest person is also an interesting aspect to look at:
+
+```{r,eval=TRUE}
+# Plotting the distribution of the tallest person
+data.frame(tallest = tallest) |>
+  ggplot(aes(x = tallest)) +
+  geom_histogram(color = "black", fill = "grey", binwidth = 1) +
+  labs(title = "Distribution of Tallest Heights in Simulated Groups", x = "Height (inches)", y = "Frequency")
+```
+
+Note that it does not look normal.
+
+
+#### **R Functions for Distribution Analysis**
+* **Density Function (`d`)**: Computes the probability density function.
+* **Quantile Function (`q`)**: Determines the quantile function, the inverse of the CDF.
+* **Cumulative Distribution Function (`p`)**: Computes the cumulative distribution.
+* **Random Generation (`r`)**: Generates random deviates.
+
+##### **Normal Distribution**
+
+For the normal distribution, you use `dnorm` for density, `pnorm` for the CDF, `qnorm` for quantiles, and `rnorm` for random generation. For example, plotting the density of the normal distribution can be done as follows:
+
+```{r,eval=TRUE}
+
+# Generate data
+x <- seq(-4, 4, length.out = 100)
+normal_density <- dnorm(x)
+
+# Plotting the normal distribution
+ggplot(data.frame(x, y = normal_density), aes(x, y)) +
+  geom_line() +
+  labs(title = "Normal Distribution Density", x = "x", y = "Density")
+```
+
+##### **Student-t Distribution**
+
+The Student-t distribution is useful, particularly in scenarios where sample sizes are small, which affects the reliability of the normal distribution approximation. Here's how you can explore its density function in R:
+
+```{r,eval=TRUE}
+# Density of the Student-t distribution
+x <- seq(-4, 4, length.out = 100)
+t_density <- dt(x, df = 10)  # df is degrees of freedom
+
+# Plotting
+ggplot(data.frame(x, y = t_density), aes(x, y)) +
+  geom_line() +
+  labs(title = "Student-t Distribution Density", x = "x", y = "Density")
+```
+
+##### **Chi-square Distribution**
+
+Another important distribution, especially in hypothesis testing, is the Chi-square distribution. It is used extensively in tests of independence and goodness-of-fit:
+
+```{r,eval=TRUE}
+# Density of the Chi-square distribution
+x <- seq(0, 20, length.out = 100)
+chi_sq_density <- dchisq(x, df = 10)
+
+# Plotting
+ggplot(data.frame(x, y = chi_sq_density), aes(x, y)) +
+  geom_line() +
+  labs(title = "Chi-square Distribution Density", x = "x", y = "Density")
+```
+
+##### **Exponential and Gamma Distributions**
+
+These are useful for modeling the time until an event happens, such as the lifetime of a product or time between events in a Poisson process:
+
+```{r,eval=TRUE}
+# Exponential distribution density
+x <- seq(0, 5, length.out = 100)
+exp_density <- dexp(x, rate = 1)
+
+# Gamma distribution density
+gamma_density <- dgamma(x, shape = 2, rate = 2)
+
+# Plotting
+ggplot(data.frame(x, exp = exp_density, gamma = gamma_density), aes(x)) +
+  geom_line(aes(y = exp, color = "Exponential")) +
+  geom_line(aes(y = gamma, color = "Gamma")) +
+  labs(title = "Exponential and Gamma Distributions", y = "Density") +
+  scale_color_manual(values = c("Exponential" = "blue", "Gamma" = "red"))
+```
+
+
+The variety of statistical distributions and their corresponding R functions enable researchers to model real-world data accurately and test hypotheses effectively. 
+
+## Exercises
+
+1\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 5 feet or shorter?
+
+2\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 6 feet or taller?
+
+3\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is between 61 and 67 inches?
+
+4\. Repeat the exercise above, but convert everything to centimeters. That is, multiply every height, including the standard deviation, by 2.54. What is the answer now?
